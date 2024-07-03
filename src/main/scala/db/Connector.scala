@@ -13,7 +13,7 @@ class Connector {
   private val db: DB = {
     println("Connecting")
     val driver = AsyncDriver()
-    val connection = driver.connect("mongodb://mongo:27017")
+    val connection = driver.connect("mongodb://127.0.0.1:27017")
     Await.result(connection.flatMap(_.database("trip")), 20.seconds)
   }
 

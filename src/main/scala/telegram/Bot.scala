@@ -16,10 +16,12 @@ import com.bot4s.telegram.api.RequestHandler
 import com.bot4s.telegram.clients.ScalajHttpClient
 import com.bot4s.telegram.future.TelegramBot
 import java.nio.file.Paths
-import mbti.MbtiService
-import model.Persona
+import persona.PersonaService
+import persona.model.Persona
+import place.model.Place
+import place.PlaceService
 
-class Bot(service: MbtiService)
+class Bot(personaService: PersonaService, placeService: PlaceService)
     extends TelegramBot
     with Polling
     with Commands[Future]
@@ -27,9 +29,10 @@ class Bot(service: MbtiService)
     with ChatActions[Future] {
 
   val ilufarToken = "7299741842:AAEX2BxTDBAFS-rgwZx2-aDnKfRjmwlwbwo"
+  val mbtiToken = "7403658824:AAHYEngZP91B7FG3aoROgTbb6aP89CNQAxk"
 
   override val client: RequestHandler[Future] = new ScalajHttpClient(
-    ilufarToken
+    mbtiToken
   )
   onCommand("start") { implicit msg =>
     withArgs { args =>
@@ -51,9 +54,11 @@ class Bot(service: MbtiService)
       val mbti = args.mkString(" ")
 
       for {
-        persona <- service.find(mbti)
-        p = persona.get if persona.isDefined
-        r <- Future { scalaj.http.Http(p.img).asBytes }
+        personaOption <- personaService.find(mbti)
+        persona = personaOption.get if personaOption.isDefined
+        placeOption <- placeService.findByMbti(persona.mbti)
+        place = placeOption.get if placeOption.isDefined
+        r <- Future { scalaj.http.Http(place.img).asBytes }
         if r.isSuccess
         bytes = r.body
         pic = InputFile("pic", bytes)
@@ -61,17 +66,17 @@ class Bot(service: MbtiService)
           SendPhoto(
             msg.source,
             pic,
-            getText(p)
+            getText(persona, place)
           )
         )
       } yield ()
     }
   }
 
-  def getText(persona: Persona): String = {
+  def getText(persona: Persona, place: Place): String = {
     s""" 
-      \n${persona.mbti} - ${persona.role}
-      \n${persona.place}
+      \n${persona.mbti.toUpperCase()} - ${persona.role.capitalize}
+      \n${place.name.capitalize}, ${place.country.capitalize} 
       \n${persona.description}
     """
   }

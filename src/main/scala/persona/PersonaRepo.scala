@@ -1,4 +1,4 @@
-package mbti
+package persona
 
 import scala.concurrent.{ExecutionContext, Future}
 import reactivemongo.api.bson.{BSONDocument, BSONDocumentHandler}
@@ -6,14 +6,13 @@ import db.Connector
 import scala.util.Try
 import reactivemongo.api.Cursor
 import reactivemongo.api.bson.{Macros, BSONObjectID}
-import model.Persona
-import model.PersonaId
+import persona.model.{PersonaId, Persona}
 
-class MbtiRepo(connector: Connector) {
+class PersonaRepo(connector: Connector) {
 
   private val col = connector.mbtis
 
-  import mbti.bson.PersonaIdBsonSupport.personaIdHandler
+  import persona.bson.PersonaIdBsonSupport.personaIdHandler
   private implicit val personaHandler: BSONDocumentHandler[Persona] =
     Macros.handler[Persona]
   def getOne(

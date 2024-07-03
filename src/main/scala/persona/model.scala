@@ -1,4 +1,4 @@
-package model
+package persona.model
 
 import common.Id
 
@@ -8,7 +8,5 @@ final case class Persona(
     _id: PersonaId,
     mbti: String,
     role: String,
-    img: String,
-    description: String,
-    place: String
+    description: String
 )
